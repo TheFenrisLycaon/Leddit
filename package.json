@@ -1,0 +1,22 @@
+{
+    "name": "leddit",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "watch": "tsc -w",
+        "dev": "nodemon dist/index.js",
+        "devs": "nodemon --exec ts-node sr/index.js",
+        "startj": "node dist/index.js",
+        "starts": "ts-node src/index.ts"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@types/node": "^16.4.13",
+        "nodemon": "^2.0.12",
+        "ts-node": "^10.1.0",
+        "typescript": "^4.3.5"
+    }
+}
