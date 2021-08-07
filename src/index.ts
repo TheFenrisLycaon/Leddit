@@ -8,7 +8,7 @@ import { buildSchema } from "type-graphql";
 import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
 import "reflect-metadata";
-// import { Post } from "./entities/Post";
+// import { Post } from "./entities/post";
 
 const main = async () => {
   const orm = await MikroORM.init(microConfig);
