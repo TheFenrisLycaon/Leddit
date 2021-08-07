@@ -1,18 +1,33 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
+var __importDefault = (this && this.__importDefault) || function(mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const core_1 = require("@mikro-orm/core");
-const Post_1 = require("./entities/Post");
 const mikro_orm_config_1 = __importDefault(require("./mikro-orm.config"));
-const main = async () => {
+const express_1 = __importDefault(require("express"));
+const apollo_server_express_1 = require("apollo-server-express");
+const type_graphql_1 = require("type-graphql");
+const hello_1 = require("./resolvers/hello");
+const post_1 = require("./resolvers/post");
+require("reflect-metadata");
+const main = async() => {
     const orm = await core_1.MikroORM.init(mikro_orm_config_1.default);
-    const post = orm.em.create(Post_1.Post, { title: "Hello World!" });
-    await orm.em.persistAndFlush(post);
-    console.log("=======SQL=========");
-    const posts = await orm.em.find(Post_1.Post, {});
-    console.log(posts);
+    await orm.getMigrator().up();
+    console.log("======= SQL Ready =========");
+    const app = express_1.default();
+    const appServer = new apollo_server_express_1.ApolloServer({
+        schema: await type_graphql_1.buildSchema({
+            resolvers: [hello_1.HelloResolver, post_1.PostResolver],
+            validate: false
+        }),
+        context: () => ({ em: orm.em }),
+    });
+    await appServer.start();
+    appServer.applyMiddleware({ app });
+    app.listen(4000, () => {
+        console.log("Server started on port 4000");
+    });
 };
 main().catch((err) => {
     console.error(err);
