@@ -22,6 +22,7 @@ const main = async () => {
     context: () => ({ em: orm.em }),
   });
 
+  await apolloServer.start()
   apolloServer.applyMiddleware({ app });
 
   app.listen(4000, () => {
