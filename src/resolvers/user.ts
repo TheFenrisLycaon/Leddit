@@ -1,6 +1,7 @@
 import argon2 from "argon2";
 import {
-  Arg, Ctx, Field, InputType, Mutation, ObjectType, Resolver
+  Arg, Ctx, Field, InputType, Mutation, ObjectType,
+  Query, Resolver
 } from "type-graphql";
 import { User } from "../entities/User";
 import { MyContext } from "../types";
@@ -25,17 +26,27 @@ class FieldError {
 class UserResponse {
   @Field(() => [FieldError], { nullable: true })
   errors?: FieldError[];
-
   @Field(() => User, { nullable: true })
   user?: User;
 }
 
 @Resolver()
 export class UserResolver {
+  @Query(() => User, { nullable: true })
+  async me(@Ctx() { req, em }: MyContext) {
+
+    if (!req.session.userID) {
+      return null;
+    }
+
+    const user = await em.findOne(User, { id: req.session.userID });
+    return user;
+  }
+
   @Mutation(() => UserResponse)
   async register(
     @Arg("options") options: UsernamePasswordInput,
-    @Ctx() { em }: MyContext
+    @Ctx() { em, req }: MyContext
   ): Promise<UserResponse> {
     if (options.username.length <= 2) {
       return {
@@ -64,11 +75,10 @@ export class UserResolver {
       username: options.username,
       password: hashedPassword,
     });
+
     try {
       await em.persistAndFlush(user);
     } catch (err) {
-      //|| err.detail.includes("already exists")) {
-      // duplicate username error
       if (err.code === "23505") {
         return {
           errors: [
@@ -80,13 +90,15 @@ export class UserResolver {
         };
       }
     }
+
+    req.session.userID = user.id;
     return { user };
   }
 
   @Mutation(() => UserResponse)
   async login(
     @Arg("options") options: UsernamePasswordInput,
-    @Ctx() { em }: MyContext
+    @Ctx() { em, req }: MyContext
   ): Promise<UserResponse> {
     const user = await em.findOne(User, { username: options.username });
     if (!user) {
@@ -99,6 +111,7 @@ export class UserResolver {
         ],
       };
     }
+
     const valid = await argon2.verify(user.password, options.password);
     if (!valid) {
       return {
@@ -111,6 +124,7 @@ export class UserResolver {
       };
     }
 
+    req.session.userID = user.id;
     return {
       user,
     };
