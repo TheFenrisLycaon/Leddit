@@ -25,7 +25,7 @@ const main = async () => {
 
   const app = express();
   const RedisStore = connectRedis(session);
-  const redisClient = redis.createClient();
+  const redisClient = redis.createClient({port:6387});
 
   app.use(
     session({
@@ -62,7 +62,6 @@ const main = async () => {
   });
 };
 
-main()
-// .catch((err) => {
-//   console.error(err);
-// });
+main().catch((err) => {
+  console.error(err);
+});
